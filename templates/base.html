@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ro"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>{% block title %}FirmaOnline{% endblock %} – uz intern</title>
+<link rel="stylesheet" href="/static/style.css?v=2"></head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="logo" href="/">Firma<span>Online</span></a>
+  {% if user %}<nav class="menu">
+    <a href="/" class="{{ 'on' if request.path=='/' }}">Dosar nou</a>
+    <a href="/dosare" class="{{ 'on' if request.path=='/dosare' }}">Dosare</a>
+    <a href="/persoane" class="{{ 'on' if request.path=='/persoane' }}">Persoane</a>
+    <a href="/firme" class="{{ 'on' if request.path=='/firme' }}">Firme</a>
+    <form method="post" action="/logout" class="lo"><button title="Ieșire">{{ user }} · Ieșire</button></form>
+  </nav>{% endif %}
+</div></header>
+<main class="wrap">{% if db_efemer and user %}<div class="err" style="margin-top:14px">⚠️ Baza de date permanentă nu este conectată (lipsește DATABASE_URL). Datele salvate acum se pierd la repornirea serviciului.</div>{% endif %}{% block body %}{% endblock %}</main>
+<footer class="wrap foot">Aplicație internă · documentele sunt proiecte de validat de avocat · imaginile CI sunt procesate în memorie și nu se stochează (GDPR).</footer>
+{% block scripts %}{% endblock %}
+</body></html>

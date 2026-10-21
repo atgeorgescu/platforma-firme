@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% block title %}Dosare{% endblock %}
+{% block body %}
+<div class="hdr"><h1>Dosare</h1><a class="btn" href="/">+ Dosar nou</a></div>
+<form class="search"><input name="q" value="{{ q }}" placeholder="Caută după denumire, nume asociat, CNP…"><button class="btn ghost">Caută</button></form>
+<div class="card">
+{% if not items %}<p class="hint">Niciun dosar{% if q %} pentru „{{ q }}”{% endif %}.</p>{% endif %}
+<table class="tbl">
+<thead><tr><th>#</th><th>Firmă</th><th>Asociați</th><th>Actualizat</th><th>De</th><th></th></tr></thead>
+<tbody>
+{% for d in items %}<tr data-id="{{ d.id }}">
+ <td>{{ d.id }}</td><td><b>{{ d.denumire }}</b> S.R.L.<br><small class="hint">înființare SRL · {{ d.status }}</small></td><td>{{ d.asociati }}</td><td>{{ d.updated_at }}</td><td>{{ d.created_by }}</td>
+ <td class="act"><a href="/?dosar={{ d.id }}">Deschide</a> · <a href="#" class="regen">PDF-uri</a> · <a href="#" class="del">Șterge</a></td></tr>
+ <tr class="files-row" hidden><td colspan="6"></td></tr>{% endfor %}
+</tbody></table>
+</div>
+<div class="card"><h3>Backup</h3><p class="hint">Baza de date gratuită Render expiră după 30 de zile – descărcați periodic un backup și restaurați-l într-o bază nouă.</p>
+<a class="btn ghost" href="/api/backup">⬇ Descarcă backup (JSON)</a>
+<label class="btn ghost" style="display:inline-block;margin:0">⬆ Importă backup<input type="file" id="imp" accept=".json" hidden></label> <span id="impres" class="hint"></span></div>
+{% endblock %}
+{% block scripts %}<script src="/static/common.js?v=2"></script><script>
+document.querySelectorAll('.del').forEach(a=>a.onclick=async e=>{e.preventDefault();const tr=a.closest('tr');if(!confirm('Ștergeți dosarul #'+tr.dataset.id+'?'))return;await api('/api/dosare/'+tr.dataset.id,{method:'DELETE'});tr.nextElementSibling.remove();tr.remove()});
+document.querySelectorAll('.regen').forEach(a=>a.onclick=async e=>{e.preventDefault();const tr=a.closest('tr');const j=await api('/api/dosare/'+tr.dataset.id+'/regenereaza',{method:'POST'});const fr=tr.nextElementSibling;fr.hidden=false;fr.firstElementChild.innerHTML=filesHTML(j)});
+$('#imp').onchange=async e=>{const fd=new FormData();fd.append('fisier',e.target.files[0]);const j=await api('/api/import',{method:'POST',body:fd});$('#impres').textContent=j.ok?('Importate: '+j.importate):(j.erori||[]).join(' ')};
+</script>{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% block title %}Firme{% endblock %}
+{% block body %}
+<div class="hdr"><h1>Firme</h1></div>
+<form class="search"><input name="q" value="{{ q }}" placeholder="Caută după denumire…"><button class="btn ghost">Caută</button></form>
+<div class="card">
+{% if not items %}<p class="hint">Nicio firmă salvată.</p>{% endif %}
+<table class="tbl"><thead><tr><th>Denumire</th><th>Sediu</th><th>CAEN</th><th>Capital</th><th>Actualizat</th></tr></thead><tbody>
+{% for c in items %}{% set s = c.data.sediu or {} %}<tr><td><b>{{ c.data.denumire }}</b> S.R.L.</td><td>{{ s.localitate }}, str. {{ s.strada }} nr. {{ s.numar }}, jud. {{ s.judet }}</td><td>{{ c.data.caen_principal }}</td><td>{{ c.data.capital }} lei</td><td>{{ c.updated_at }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

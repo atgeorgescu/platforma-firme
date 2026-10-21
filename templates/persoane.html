@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% block title %}Persoane{% endblock %}
+{% block body %}
+<div class="hdr"><h1>Persoane salvate</h1></div>
+<form class="search"><input name="q" value="{{ q }}" placeholder="Caută după nume sau CNP…"><button class="btn ghost">Caută</button></form>
+<div class="card">
+{% if not items %}<p class="hint">Nicio persoană salvată. Persoanele se salvează automat la generarea unui dosar.</p>{% endif %}
+<table class="tbl"><thead><tr><th>Nume</th><th>CNP</th><th>CI</th><th>Domiciliu</th><th>Actualizat</th><th></th></tr></thead><tbody>
+{% for p in items %}<tr data-id="{{ p.id }}"><td><b>{{ p.nume }}</b></td><td>{{ p.cnp }}</td><td>{{ p.data.ci_serie }} {{ p.data.ci_numar }}{% if p.data.ci_valabilitate %}<br><small class="hint">valabil până la {{ p.data.ci_valabilitate }}</small>{% endif %}</td><td>{{ p.data.domiciliu }}</td><td>{{ p.updated_at }}</td><td class="act"><a href="#" class="del">Șterge</a></td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}
+{% block scripts %}<script src="/static/common.js?v=2"></script><script>
+document.querySelectorAll('.del').forEach(a=>a.onclick=async e=>{e.preventDefault();const tr=a.closest('tr');if(!confirm('Ștergeți definitiv datele acestei persoane?'))return;await api('/api/persoane/'+tr.dataset.id,{method:'DELETE'});tr.remove()});
+</script>{% endblock %}

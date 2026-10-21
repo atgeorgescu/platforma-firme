@@ -1,16 +1,12 @@
-<!doctype html>
-<html lang="ro"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FirmaOnline – Înființare SRL (prototip)</title>
-<link rel="stylesheet" href="/static/style.css"></head>
-<body>
-<header class="top"><div class="wrap"><div class="logo">Firma<span>Online</span></div><span class="badge">Prototip · fără plăți reale</span></div></header>
-<main class="wrap">
-  <section class="hero"><h1>Înființează-ți SRL-ul online</h1><p>Completezi datele în câțiva pași și primești imediat dosarul de documente generat automat, plus pașii următori.</p>
-  <div class="warn">⚠️ Documentele generate sunt <b>proiecte</b> și trebuie validate de un avocat înainte de semnare și depunere la ONRC.</div></section>
+{% extends "base.html" %}{% block title %}Dosar înființare SRL{% endblock %}
+{% block body %}
+  <section class="hero"><h1 id="titlu">Dosar nou – înființare SRL</h1><p>Completați datele (sau scanați CI), apoi generați documentele. Persoanele, firma și dosarul se salvează automat.</p>
+  <div class="warn">⚠️ Documentele generate sunt <b>proiecte</b> și trebuie validate de avocat înainte de semnare și depunere la ONRC.</div></section>
   <ol class="steps" id="steps"></ol>
   <form id="f" novalidate>
    <div class="card step" data-title="Denumire">
      <h2>1. Denumirea firmei</h2>
+     <div class="toolrow"><label>Firmă salvată (opțional)<select id="pickFirma"><option value="">— alegeți pentru a precompleta denumirea și sediul —</option></select></label></div>
      <label>Denumire principală<input name="denumire" placeholder="ex. Brădet Consult" required></label>
      <div class="grid2"><label>Alternativa 1<input name="alt1" required></label><label>Alternativa 2<input name="alt2" required></label></div>
      <p class="hint">ONRC verifică disponibilitatea în ordinea propusă. Sufixul „S.R.L.” se adaugă automat.</p>
@@ -23,8 +19,9 @@
      <div class="grid2"><label>Nr. carte funciară (opțional)<input name="s_cf"></label><label>Durata comodatului (ani)<input name="s_durata" type="number" min="1" value="5"></label></div>
      <label class="chk"><input type="checkbox" name="s_activ"> Se desfășoară activitate la sediu</label>
      <h3>Proprietarul spațiului (comodant)</h3>
-     <div class="grid2"><label>Nume și prenume<input name="p_nume" required></label><label>CNP<input name="p_cnp" class="cnp" maxlength="13" inputmode="numeric" required><small class="v"></small></label></div>
-     <div class="grid3"><label>Serie CI<input name="p_ci_serie" maxlength="2"></label><label>Număr CI<input name="p_ci_numar" maxlength="6" inputmode="numeric"></label><label>Domiciliu<input name="p_domiciliu"></label></div>
+     <div id="propBox"><div class="toolrow" id="propTools"><label>Persoană salvată<select class="pickPers"><option value="">— alegeți —</option></select></label><label class="btn ghost">📷 Scanează CI<input type="file" class="scan" accept="image/*" capture="environment" multiple hidden></label></div><div class="scanres" hidden></div>
+     <div class="grid2"><label>Nume și prenume<input name="p_nume" data-k="nume" required></label><label>CNP<input name="p_cnp" data-k="cnp" class="cnp" maxlength="13" inputmode="numeric" required><small class="v"></small></label></div>
+     <div class="grid3"><label>Serie CI<input name="p_ci_serie" data-k="ci_serie" maxlength="2"></label><label>Număr CI<input name="p_ci_numar" data-k="ci_numar" maxlength="6" inputmode="numeric"></label><label>Domiciliu<input name="p_domiciliu" data-k="domiciliu"></label></div></div>
    </div>
    <div class="card step" data-title="Asociați">
      <h2>3. Asociați și cote</h2>
@@ -55,18 +52,20 @@
    <div class="nav"><button type="button" class="btn ghost" id="prev">← Înapoi</button><button type="button" class="btn" id="next">Continuă →</button></div>
   </form>
   <section id="rezultat" class="card" hidden></section>
-</main>
-<footer class="wrap foot">Prototip demonstrativ · nu transmite date la ONRC · nu procesează plăți · datele se șterg automat după o oră.</footer>
 <template id="tplPers">
  <div class="pers">
   <div class="pers-h"><b class="ttl"></b><button type="button" class="x" title="Elimină">✕</button></div>
+  <div class="toolrow"><label>Persoană salvată<select class="pickPers"><option value="">— alegeți —</option></select></label><label class="btn ghost">📷 Scanează CI (față/verso)<input type="file" class="scan" accept="image/*" capture="environment" multiple hidden></label></div>
+  <div class="scanres" hidden></div>
   <div class="copy-from"></div>
   <div class="grid2"><label>Nume și prenume<input data-k="nume" required></label><label>CNP<input data-k="cnp" class="cnp" maxlength="13" inputmode="numeric" required><small class="v"></small></label></div>
-  <div class="grid3"><label>Cetățenie<input data-k="cetatenie" value="română"></label><label>Data nașterii<input data-k="data_nasterii" placeholder="zz.ll.aaaa"></label><label>Locul nașterii<input data-k="loc_nastere"></label></div>
+  <div class="grid4"><label>Sex<select data-k="sex"><option value=""></option><option>M</option><option>F</option></select></label><label>Cetățenie<input data-k="cetatenie" value="română"></label><label>Data nașterii<input data-k="data_nasterii" placeholder="zz.ll.aaaa"></label><label>Locul nașterii<input data-k="loc_nastere"></label></div>
   <div class="grid4"><label>Serie CI<input data-k="ci_serie" maxlength="2" required></label><label>Număr CI<input data-k="ci_numar" maxlength="6" inputmode="numeric" required></label><label>Emisă de<input data-k="ci_emitent"></label><label>La data<input data-k="ci_data" placeholder="zz.ll.aaaa"></label></div>
+  <div class="grid2"><label>Valabilă până la<input data-k="ci_valabilitate" placeholder="zz.ll.aaaa"></label><span></span></div>
   <label>Domiciliu (complet)<input data-k="domiciliu" required></label>
   <div class="extra"></div>
  </div>
 </template>
-<script src="/static/app.js"></script>
-</body></html>
+<script>window.DOSAR_ID={{ dosar_id|tojson }};</script>
+{% endblock %}
+{% block scripts %}<script src="/static/common.js?v=2"></script><script src="/static/app.js?v=2"></script>{% endblock %}

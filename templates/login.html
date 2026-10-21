@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% block title %}Autentificare{% endblock %}
+{% block body %}
+<div class="card login">
+  <h1>Autentificare</h1>
+  <p class="hint">Aplicație internă – acces doar pentru personalul firmei.</p>
+  {% if not configurat %}<div class="err">Parola aplicației nu este configurată (variabila APP_PASSWORD).</div>{% endif %}
+  {% if err %}<div class="err">{{ err }}</div>{% endif %}
+  <form method="post">
+    <label>Utilizator<input name="user" value="admin" autocomplete="username"></label>
+    <label>Parolă<input name="parola" type="password" autocomplete="current-password" autofocus required></label>
+    <button class="btn" style="width:100%">Intră</button>
+  </form>
+</div>
+{% endblock %}
