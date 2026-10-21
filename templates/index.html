@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ro"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FirmaOnline – Înființare SRL (prototip)</title>
+<link rel="stylesheet" href="/static/style.css"></head>
+<body>
+<header class="top"><div class="wrap"><div class="logo">Firma<span>Online</span></div><span class="badge">Prototip · fără plăți reale</span></div></header>
+<main class="wrap">
+  <section class="hero"><h1>Înființează-ți SRL-ul online</h1><p>Completezi datele în câțiva pași și primești imediat dosarul de documente generat automat, plus pașii următori.</p>
+  <div class="warn">⚠️ Documentele generate sunt <b>proiecte</b> și trebuie validate de un avocat înainte de semnare și depunere la ONRC.</div></section>
+  <ol class="steps" id="steps"></ol>
+  <form id="f" novalidate>
+   <div class="card step" data-title="Denumire">
+     <h2>1. Denumirea firmei</h2>
+     <label>Denumire principală<input name="denumire" placeholder="ex. Brădet Consult" required></label>
+     <div class="grid2"><label>Alternativa 1<input name="alt1" required></label><label>Alternativa 2<input name="alt2" required></label></div>
+     <p class="hint">ONRC verifică disponibilitatea în ordinea propusă. Sufixul „S.R.L.” se adaugă automat.</p>
+   </div>
+   <div class="card step" data-title="Sediu">
+     <h2>2. Sediul social</h2>
+     <div class="grid2"><label>Județ<input name="s_judet" required></label><label>Localitate<input name="s_localitate" required></label></div>
+     <div class="grid2"><label>Stradă<input name="s_strada" required></label><label>Număr<input name="s_numar" required></label></div>
+     <div class="grid4"><label>Bloc<input name="s_bloc"></label><label>Scară<input name="s_scara"></label><label>Etaj<input name="s_etaj"></label><label>Ap.<input name="s_ap"></label></div>
+     <div class="grid2"><label>Nr. carte funciară (opțional)<input name="s_cf"></label><label>Durata comodatului (ani)<input name="s_durata" type="number" min="1" value="5"></label></div>
+     <label class="chk"><input type="checkbox" name="s_activ"> Se desfășoară activitate la sediu</label>
+     <h3>Proprietarul spațiului (comodant)</h3>
+     <div class="grid2"><label>Nume și prenume<input name="p_nume" required></label><label>CNP<input name="p_cnp" class="cnp" maxlength="13" inputmode="numeric" required><small class="v"></small></label></div>
+     <div class="grid3"><label>Serie CI<input name="p_ci_serie" maxlength="2"></label><label>Număr CI<input name="p_ci_numar" maxlength="6" inputmode="numeric"></label><label>Domiciliu<input name="p_domiciliu"></label></div>
+   </div>
+   <div class="card step" data-title="Asociați">
+     <h2>3. Asociați și cote</h2>
+     <div id="asociati"></div>
+     <button type="button" class="btn ghost" id="addAsoc">+ Adaugă asociat</button>
+     <div class="sum" id="sumCote">Total cote: 0%</div>
+   </div>
+   <div class="card step" data-title="Administrare">
+     <h2>4. Administrator(i)</h2>
+     <div id="admini"></div>
+     <button type="button" class="btn ghost" id="addAdm">+ Adaugă administrator</button>
+   </div>
+   <div class="card step" data-title="Capital & CAEN">
+     <h2>5. Capital, activitate și durată</h2>
+     <div class="grid2"><label>Capital social (lei)<input name="capital" type="number" min="{{capital_minim}}" value="{{capital_minim}}" required></label>
+     <label>Valoarea unei părți sociale (lei)<input name="valoare_parte" type="number" min="1" value="10" required></label></div>
+     <p class="hint">Capitalul minim pentru un SRL nou-înființat este de {{capital_minim}} lei (art. VI alin. 2 din Legea nr. 239/2025, în vigoare din 18.12.2025). <span id="nrParti"></span></p>
+     <div class="grid2"><label>CAEN principal (Rev. 3, 4 cifre)<input name="caen_principal" maxlength="4" inputmode="numeric" placeholder="ex. 6210" required></label><label>Descriere activitate principală<input name="caen_desc" placeholder="ex. Activități de realizare a software-ului la comandă"></label></div>
+     <label>CAEN secundare (separate prin virgulă)<input name="caen_sec" placeholder="ex. 6220, 7022, 4791"></label>
+     <div class="grid2"><label>Durata societății<select name="durata"><option value="nelimitata">Nelimitată</option><option value="limitata">Limitată</option></select></label><label>Număr de ani<input name="durata_ani" type="number" min="1" disabled></label></div>
+   </div>
+   <div class="card step" data-title="Verificare">
+     <h2>6. Verificare și generare</h2>
+     <div id="rezumat" class="rez"></div>
+     <label class="chk"><input type="checkbox" id="acord"> Confirm că datele sunt corecte și înțeleg că documentele sunt proiecte, de validat de un avocat.</label>
+   </div>
+   <div id="erori" class="err" hidden></div>
+   <div class="nav"><button type="button" class="btn ghost" id="prev">← Înapoi</button><button type="button" class="btn" id="next">Continuă →</button></div>
+  </form>
+  <section id="rezultat" class="card" hidden></section>
+</main>
+<footer class="wrap foot">Prototip demonstrativ · nu transmite date la ONRC · nu procesează plăți · datele se șterg automat după o oră.</footer>
+<template id="tplPers">
+ <div class="pers">
+  <div class="pers-h"><b class="ttl"></b><button type="button" class="x" title="Elimină">✕</button></div>
+  <div class="copy-from"></div>
+  <div class="grid2"><label>Nume și prenume<input data-k="nume" required></label><label>CNP<input data-k="cnp" class="cnp" maxlength="13" inputmode="numeric" required><small class="v"></small></label></div>
+  <div class="grid3"><label>Cetățenie<input data-k="cetatenie" value="română"></label><label>Data nașterii<input data-k="data_nasterii" placeholder="zz.ll.aaaa"></label><label>Locul nașterii<input data-k="loc_nastere"></label></div>
+  <div class="grid4"><label>Serie CI<input data-k="ci_serie" maxlength="2" required></label><label>Număr CI<input data-k="ci_numar" maxlength="6" inputmode="numeric" required></label><label>Emisă de<input data-k="ci_emitent"></label><label>La data<input data-k="ci_data" placeholder="zz.ll.aaaa"></label></div>
+  <label>Domiciliu (complet)<input data-k="domiciliu" required></label>
+  <div class="extra"></div>
+ </div>
+</template>
+<script src="/static/app.js"></script>
+</body></html>
