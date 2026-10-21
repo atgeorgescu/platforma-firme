@@ -7,7 +7,7 @@ from validators import cnp_valid
 
 _engine = None
 import os
-MAXS = int(os.environ.get('OCR_MAX_SIDE', '1280'))
+MAXS = int(os.environ.get('OCR_MAX_SIDE', '1152'))
 def engine():
     global _engine
     if _engine is None:
@@ -59,11 +59,14 @@ def _sorted(res):
 def _mrz_count(lines):
     return sum(1 for l in lines if l.count("<") >= 2 or re.match(r"^[I1][DO0]R[O0]U", l.replace(" ", "")))
 
-def ocr_lines(data):
+def ocr_lines(data, alt=True):
     img = _prep(data)
-    res, _ = engine()(img)
-    if not res: return [], []
+    res, _ = engine()(img, use_cls=False)
+    if not res: return [], (lambda: [])
     res = _sorted(res); lines = [r[1] for r in res]
+    return lines, (lambda: _alt_mrz(img, res, lines))
+
+def _alt_mrz(img, res, lines):
     # A doua trecere pe zona MRZ (detectorul sare uneori rânduri): decupăm de la primul rând MRZ în jos și mărim 2x
     first = next((r for r in res if re.match(r"^[I1][DO0]R[O0]U", r[1].replace(" ", ""))), None)
     if first is not None:
@@ -87,7 +90,8 @@ def ocr_lines(data):
             strip = crop.crop((0, max(0, b0 - pad), crop.width, min(crop.height, b1 + pad)))
             strip = strip.resize((int(strip.width * 48 / strip.height), 48), Image.LANCZOS).convert("RGB")
             best_t, best_s = None, -1
-            for H, rot in ((48, 0), (40, 0), (32, 0), (48, 180)):
+            for H, rot in ((48, 0), (48, 180), (36, 0)):
+                if best_s > 1.1: break
                 st2 = strip.resize((int(strip.width * H / 48), H), Image.LANCZOS)
                 if rot: st2 = st2.rotate(rot)
                 rr, _ = engine()(np.array(st2), use_det=False, use_cls=False, use_rec=True)
@@ -101,22 +105,26 @@ def ocr_lines(data):
             if best_t: l2.append(best_t)
         l2 = [l for l in l2 if len(mrz.clean_line(l)) >= 25]
         if len(l2) >= 2:
-            return lines, l2
-    return lines, []
+            return l2
+    return []
 
 def _norm(s):
     return unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode().lower()
 
 def extract(images):
     """images: listă de bytes (față și/sau verso). Imaginile nu sunt salvate pe disc."""
-    lines = []; alts = []
+    lines = []; alt_fns = []
     for b in images:
-        l, a = ocr_lines(b); lines += l
-        if a: alts.append(a)
+        l, a = ocr_lines(b); lines += l; alt_fns.append(a)
     fix = lambda ls: [re.sub(r"^(1DROU|IOROU|IDR0U|1DR0U|IOR0U)", "IDROU", mrz.clean_line(l)) if ("<" in l or re.match(r"^[I1][DO0]R[O0]U", l.replace(" ", ""))) else l for l in ls]
     out = {"avertismente": [], "linii_ocr": lines}
     m = {}; kind = None; best = -1
-    for cand in [fix(lines)] + [fix(a) for a in alts]:
+    def cands():
+        yield fix(lines)
+        for fn in alt_fns:
+            a = fn()
+            if a: yield fix(a)
+    for cand in cands():
         for k, L in mrz.find_mrz_all(cand):
             try: pm = mrz.parse(k, L)
             except Exception: continue

@@ -24,6 +24,9 @@ class OrtInferSession():
         sess_opt.log_severity_level = 4
         sess_opt.enable_cpu_mem_arena = False
         sess_opt.graph_optimization_level = GraphOptimizationLevel.ORT_ENABLE_ALL
+        sess_opt.enable_mem_pattern = False  # modificare locală: RAM mai mic pe planul gratuit
+        sess_opt.intra_op_num_threads = int(__import__("os").environ.get("ORT_THREADS", "1"))
+        sess_opt.inter_op_num_threads = 1
 
         cpu_ep = 'CPUExecutionProvider'
         cpu_provider_options = {
