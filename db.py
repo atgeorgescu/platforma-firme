@@ -3,8 +3,10 @@ import os, json, datetime as dt
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Text, DateTime, select, or_, func, delete, update, insert
 
 url = os.environ.get("DATABASE_URL") or "sqlite:///" + os.path.join(os.path.dirname(__file__), "local.sqlite")
-if url.startswith("postgres://"):
-    url = "postgresql://" + url[len("postgres://"):]
+for pre in ("postgres://", "postgresql://"):
+    if url.startswith(pre):
+        url = "postgresql+psycopg2://" + url[len(pre):]  # SQLAlchemy 2.1 alege implicit psycopg v3; folosim psycopg2-binary
+        break
 engine = create_engine(url, pool_pre_ping=True, pool_size=3, max_overflow=2) if url.startswith("postgresql") else create_engine(url)
 md = MetaData()
 from zoneinfo import ZoneInfo
